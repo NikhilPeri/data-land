@@ -4,7 +4,7 @@ import requests
 import json
 import time
 
-class UpdateProlineTicketsStage(object):
+class UpdateTickets(object):
     def process():
         for ticket in fetch_ticket_list():
             create_ticket(ticket)

@@ -1,57 +1,34 @@
-from datetime import datetime
 
+class UpdateProlineEvents(Object)
+    def perform(self):
+
+    def fetch_raw_data():
+        OLG_RESULTS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/results/all.jsonp?callback=_jqjsp"
+        response = requests.get(OLG_EVENTS_ENDPOINT + "&_" + str(int(time.time()*1000)), verify=False).text
+        response = response.replace('_jqjsp(', '', 1)
+        response = response.replace(');', '', 1)
+
+if __name__ == '__main__':
+    job = FetchProlineJob()
+    job.run()
+
+
+
+import urllib
+import urllib2
 import requests
-import json
 import time
+import json
 
-class UpdateProlineTicketsStage(Object)
-    def process(self):
-        for ticket in fetch_ticket_list():
-            create_ticket(ticket)
+with open('data/events.json') as data_file:
+    data = json.load(data_file)
 
-    def create_ticket(ticket_data):
-        ticket_id = int(ticket_data['listNumber'])
-        ticket_date = datetime.fromtimestamp(ticket_data['listDate']/1000)
+print(OLG_EVENTS_ENDPOINT + "&_" + str(int(time.time()*1000)))
+response = requests.get(OLG_EVENTS_ENDPOINT + "&_" + str(int(time.time()*1000)), verify=False).text
+response = response.replace('_jqjsp(', '', 1)
+response = response.replace(');', '', 1)
 
-        for game_data in ticket_data['eventList']:
-            create_game(ticket_id, game_data)
-
-    def create_game(ticket_id, game_data):
-        game_id = game_data['id']
-        cuttoff_date = datetime.strptime(game_data['cutoffDate'], '%Y-%m-%d %H:%M:%S.0')
-        home_symbol = game_data['home']
-        visitor_symbol = game_data['visitor']
-        home_name = game_data['homeName']
-        visitor_name = game_data['visitorName']
-        sport = game_data['sport']
-        v_plus = game_data['vplus']
-        v = game_data['v']
-        h = game_data['h']
-        h_plus = game_data['hplus']
-
-
-    def fetch_ticket_list():
-        OLG_TICKETS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/events/all.json"
-        response = requests.get(OLG_TICKETS_ENDPOINT, verify=False).text
-        return json.loads(response)['events']['eventList']
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+events = json.loads(response).get("response").get("events").get("eventList")
 
 eventsAdded = 0
 mlbEventsAdded = 0
