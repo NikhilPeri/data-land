@@ -1,4 +1,3 @@
 pytest
-records
 requests
-psycopg2
+psycopg2-binary

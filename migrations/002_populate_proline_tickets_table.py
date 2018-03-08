@@ -1,9 +1,13 @@
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData
+from ..app.utils.database import Database
+import csv
 
-import os
+def main():
+    db = Database()
 
-db = create_engine(os.environ('DATABASE_URL'))
-meta = MetaData(db)
+    with open('/data/csv/backfill_tickets.csv') as tickets_file:
+        tickets_reader = csv.DictReader(tickets_file)
+        for ticket in tickets_reader:
+            print ticket
 
-with db.connect() as conn:
+if __name__ == '__main__':
+    main()
