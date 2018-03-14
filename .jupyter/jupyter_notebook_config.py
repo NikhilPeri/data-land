@@ -1,3 +1,4 @@
+import os
 # Configuration file for jupyter-notebook.
 
 #------------------------------------------------------------------------------
@@ -159,7 +160,7 @@
 #c.NotebookApp.iopub_msg_rate_limit = 1000
 
 ## The IP address the notebook server will listen on.
-c.NotebookApp.ip = '*'
+c.NotebookApp.ip = u'*'
 
 ## Supply extra arguments that will be passed to Jinja environment.
 #c.NotebookApp.jinja_environment_options = {}
@@ -222,10 +223,10 @@ c.NotebookApp.password = u'sha1:5408848a545f:b73867f1a26fe83ad50c9997785612608cf
 #
 #  In such a case, server the notebook server on localhost is not secure since
 #  any user can connect to the notebook server via ssh.
-#c.NotebookApp.password_required = False
+c.NotebookApp.password_required = True
 
 ## The port the notebook server will listen on.
-c.NotebookApp.port = 80
+c.NotebookApp.port = int(os.environ['PORT'])
 
 ## The number of additional ports to try if the specified port is not available.
 #c.NotebookApp.port_retries = 50
