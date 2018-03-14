@@ -1,3 +1,5 @@
 pytest
 requests
 psycopg2-binary
+sqlalchemy
+jupyter
