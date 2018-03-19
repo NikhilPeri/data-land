@@ -1,11 +1,9 @@
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData
-from datetime import datetime
-
 import os
 import requests
 import json
-import time
+from datetime import datetime
+
+from sqlalchemy import MetaData, create_engine
 
 class UpdateTickets(object):
     def __init__(self):
@@ -15,7 +13,7 @@ class UpdateTickets(object):
         self.games_table = meta.tables['proline_games']
         self.conn = db.connect()
 
-    def process(self):
+    def perform(self):
         for ticket in self.fetch_ticket_list():
             self.create_ticket(ticket)
 
@@ -72,4 +70,4 @@ class UpdateTickets(object):
         return json.loads(response)['events']['eventList']
 
 if __name__ == '__main__':
-    UpdateTickets().process()
+    UpdateTickets().perform()
