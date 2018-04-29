@@ -12,6 +12,6 @@ class ProlineTickets(Base):
     created_at = Column(Time,    default=datetime.utcnow)
     updated_at = Column(Time,    default=datetime.utcnow, onupdate=datetime.utcnow)
     handle     = Column(Integer, nullable=False)
-    date       = Column(Date,    nullable=False)
+    date       = Column(Time,    nullable=False)
 
-    idx_handle_date = Index(handle, date, unique=True)
+    idx_handle_date = Index('handle', date, unique=True)

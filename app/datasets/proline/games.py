@@ -12,7 +12,7 @@ class ProlineGames(Base):
     created_at  = Column(Time,    default=datetime.utcnow)
     updated_at  = Column(Time,    default=datetime.utcnow, onupdate=datetime.utcnow)
     ticket_id   = Column(Integer, nullable=False)
-    game_handle = Column(Integer, nullable=False)
+    handle      = Column(Integer, nullable=False)
     cutoff_date = Column(Time,    nullable=False)
     home        = Column(String,  nullable=False)
     visitor     = Column(String,  nullable=False)
@@ -24,4 +24,4 @@ class ProlineGames(Base):
     h           = Column(Float)
     h_plus      = Column(Float)
 
-    idx_ticket_game_handle = Index(ticket_id, game_handle, unique=True)
+    idx_ticket_game_handle = Index('ticket_id', 'game_handle', unique=True)
