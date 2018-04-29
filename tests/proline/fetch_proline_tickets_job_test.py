@@ -1,1 +1,0 @@
-from jobs.fetch_proline_tickets_job import FetchProlineTicketsJob

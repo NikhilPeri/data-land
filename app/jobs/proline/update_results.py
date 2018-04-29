@@ -3,17 +3,19 @@ import requests
 import json
 from datetime import datetime
 
-
-from sqlalchemy import MetaData, create_engine
+from app.datasets.database import Database
+from app.datasets.proline.tickets import ProlineTickets
 
 class UpdateProlineResults(object):
     def perform(self):
+        self.db = Database.get_session('test')
         for ticket_data in self.fetch_ticket_result_data():
-            ticket_id = #TODO
+            ticket = self.db.query(ProlineTickets).filter_by(handle=ticket_data['listNumber']).first()
+
             for game_data in ticket_data['results']:
-                game_id = #TODO
+                game_id = 1
                 outcomes = self.parse_results(game_data['odds'])
-                if outcomes != []:
+
 
 
     def parse_results(self, raw_results):
