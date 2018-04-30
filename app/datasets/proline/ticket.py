@@ -5,7 +5,7 @@ from datetime import datetime
 
 Base = declarative_base()
 
-class ProlineTickets(Base):
+class ProlineTicket(Base):
     __tablename__ = 'proline_tickets'
 
     id         = Column(Integer, primary_key=True)
@@ -14,4 +14,4 @@ class ProlineTickets(Base):
     handle     = Column(Integer, nullable=False)
     date       = Column(Time,    nullable=False)
 
-    idx_handle_date = Index('handle', date, unique=True)
+    idx_handle_date = Index('handle', 'date', unique=True)

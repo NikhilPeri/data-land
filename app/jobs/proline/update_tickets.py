@@ -1,51 +1,43 @@
-import os
 import requests
 import json
 from datetime import datetime
 
-from sqlalchemy import MetaData, create_engine
+from app.datasets.database import Database
+from app.datasets.proline import ProlineTicket, ProlineGame
 
-class UpdateTickets(object):
-    def __init__(self):
-        db = create_engine(os.environ['DATABASE_URL'])
-        meta = MetaData(db, reflect=True)
-        self.tickets_table = meta.tables['proline_tickets']
-        self.games_table = meta.tables['proline_games']
-        self.conn = db.connect()
+from app.jobs import BaseJob
 
-    def perform(self):
+class UpdateTickets(BaseJob):
+    def run(self):
         for ticket in self.fetch_ticket_list():
             self.create_ticket(ticket)
 
-    def create_ticket(self, ticket_data):
+    def create_ticket(self, ticket_data):        
         ticket_handle = int(ticket_data['listNumber'])
         ticket_date = datetime.fromtimestamp(ticket_data['listDate']/1000)
 
-        try:
-            query = self.tickets_table.insert().values(handle=ticket_handle, date=ticket_date)
-            self.conn.execute(query)
-        except Exception as e:
-            print(e)
+        ticket = ProlineTicket(handle=ticket_handle, date=ticket_date)
 
-        query = self.tickets_table.select().where(self.tickets_table.c.handle == ticket_handle).limit(1)
-        ticket_id = self.conn.execute(query).fetchone().id
+        self.save_record(ticket)
+        ticket = self.db.query(ProlineGame).filter_by(handle=ticket.handle).first()
 
-        if ticket_id != None:
+        if ticket.id != None:
             for game_data in ticket_data['eventList']:
-                self.create_game(ticket_id, game_data)
+                self.create_game(ticket, game_data)
         else:
             print('missing ticket')
+            return
 
-    def create_game(self, ticket_id, game_data):
+    def create_game(self, ticket, game_data):
         v_plus = float(game_data['odds']['vplus']) if game_data['odds']['vplus'] != None else 0.0
         v = float(game_data['odds']['v']) if game_data['odds']['v'] != None else 0.0
         t = float(game_data['odds']['t']) if game_data['odds']['t'] != None else 0.0
         h = float(game_data['odds']['h']) if game_data['odds']['h'] != None else 0.0
         h_plus = float(game_data['odds']['hplus']) if game_data['odds']['hplus'] != None else 0.0
 
-        query = self.games_table.insert().values(
-            ticket_id=ticket_id,
-            game_handle=game_data['id'],
+        game = ProlineGame(
+            ticket_id=ticket.id,
+            handle=game_data['id'],
             cutoff_date=datetime.strptime(game_data['cutoffDate'], '%Y-%m-%d %H:%M:%S.0'),
             home=game_data['homeName'].strip(),
             visitor=game_data['visitorName'].strip(),
@@ -56,12 +48,7 @@ class UpdateTickets(object):
             h=h,
             h_plus=h_plus
         )
-        try:
-            self.conn.execute(query)
-        except Exception as e:
-            print(e)
-        else:
-            print(query)
+        self.save_record(game)
 
 
     def fetch_ticket_list(self):
@@ -70,4 +57,4 @@ class UpdateTickets(object):
         return json.loads(response)['events']['eventList']
 
 if __name__ == '__main__':
-    UpdateTickets().perform()
+    UpdateTickets.perform()
