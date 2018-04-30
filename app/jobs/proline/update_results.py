@@ -1,24 +1,21 @@
-import os
 import requests
 import json
 from datetime import datetime
 
 from app.datasets.database import Database
-from app.datasets.proline.tickets import ProlineTickets
+from app.datasets.proline import ProlineTicket, ProlineGame
 
-class UpdateProlineResults(object):
-    def perform(self):
-        self.db = Database.get_session('test')
+class UpdateResults(object):
+    def run(self):
         for ticket_data in self.fetch_ticket_result_data():
             ticket = self.db.query(ProlineTickets).filter_by(handle=ticket_data['listNumber']).first()
-
             for game_data in ticket_data['results']:
-                game_id = 1
-                outcomes = self.parse_results(game_data['odds'])
+                game = self.db.query(ProlineGames).filter_by(ticket_id=ticket.id, handle=game_data['']).first()
+                game.outcomes = self.parse_outcomes(game_data['odds'])
+                self.save_record(game)
 
 
-
-    def parse_results(self, raw_results):
+    def parse_outcomes(self, raw_outcomes):
         results = []
         if raw_results['vplus'] is not None:
             results.append('v+')
@@ -40,4 +37,4 @@ class UpdateProlineResults(object):
         return json.loads(response)['response']['results']['resultList']
 
 if __name__ == '__main__':
-    UpdateProlineResults().perform()
+    UpdateResults.perform()

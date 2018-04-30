@@ -5,14 +5,14 @@ import os
 
 class Database(object):
     @classmethod
-    def get_engine(cls, enviroment):
-        if enviroment == 'production':
+    def get_engine(cls):
+        if os.environ.has_key('DATALAND_PRODUCTION'):
             return create_engine(os.environ['DATABASE_URL'])
-        elif enviroment == 'test':
-            return create_engine('sqlite:///tmp/test.db')
+        else:
+            return create_engine('postgresql://nikhilperi:password@localhost:5432/dataland_dev')
 
     @classmethod
-    def get_session(cls, enviroment):
-        engine = Database.get_engine(enviroment)
+    def get_session(cls):
+        engine = Database.get_engine()
         Session = sessionmaker(bind=engine)
         return Session()

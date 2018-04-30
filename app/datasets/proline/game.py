@@ -1,11 +1,11 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Index, Integer, Time, String, Float
+from sqlalchemy import Column, Index, Integer, Time, String, Float, ARRAY, Boolean
 
 from datetime import datetime
 
 Base = declarative_base()
 
-class ProlineGames(Base):
+class ProlineGame(Base):
     __tablename__ = 'proline_games'
 
     id          = Column(Integer, primary_key=True)
@@ -17,7 +17,7 @@ class ProlineGames(Base):
     home        = Column(String,  nullable=False)
     visitor     = Column(String,  nullable=False)
     sport       = Column(String,  nullable=False)
-    outcomes    = Column(String)
+    outcomes    = Column(ARRAY(Boolean))
     v_plus      = Column(Float)
     v           = Column(Float)
     t           = Column(Float)
