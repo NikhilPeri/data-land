@@ -1,4 +1,4 @@
-pytest
+py.test
 requests
 responses
 psycopg2-binary
