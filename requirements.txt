@@ -4,3 +4,4 @@ responses
 psycopg2-binary
 sqlalchemy
 jupyter
+pytest-freezegun
