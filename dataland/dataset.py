@@ -7,7 +7,11 @@ from datetime import datetime
 def incremental_timestamp():
     return datetime.utcnow().strftime('%Y-%m-%d-%H%M')
 
-class IncrementalDataset(object):
+def read(dataset_path):
+    files = os.listdir(dataset_path)
+    return pd.read_csv(os.path.join(dataset_path, files[-1]))
+
+class Dataset(object):
     def __init__(self, directory):
         self.directory = directory
         self._metadata_path = os.path.join(self.directory, '.metadata')
@@ -18,6 +22,17 @@ class IncrementalDataset(object):
         else:
             self._new()
 
+    def _new(self, directory, columns, incremental_key):
+        with open(self._metadata_path,  'w+') as metadata:
+            NEW_METADATA = {
+                'type': 'full',
+                'columns': columns,
+                'incremental_key': incremental_key
+            }
+            metadata.write(json.dumps(NEW_METADATA))
+            self.metadata = NEW_METADATA
+
+class IncrementalDataset(Dataset):
     def load(self, start=None, end=None):
         data_drops = pd.Series(os.listdir(self.directory))
 
@@ -46,9 +61,7 @@ class IncrementalDataset(object):
     def _new(self, directory, columns, incremental_key):
         with open(self._metadata_path,  'w+') as metadata:
             NEW_METADATA = {
-                'drop_count': 0,
-                'first_drop': None,
-                'last_drop': None,
+                'type': 'incremental',
                 'columns': columns,
                 'incremental_key': incremental_key
             }
