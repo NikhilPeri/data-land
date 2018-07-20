@@ -1,0 +1,3 @@
+root: ''
+schedule: 'config/schedule.yml'
+logs: 'logs'

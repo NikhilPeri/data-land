@@ -4,9 +4,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-def incremental_timestamp():
-    return datetime.utcnow().strftime('%Y-%m-%d-%H%M')
-
 def read(dataset_path):
     files = os.listdir(dataset_path)
     return pd.read_csv(os.path.join(dataset_path, files[-1]))
