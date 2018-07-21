@@ -109,6 +109,7 @@ class Scheduler(object):
         console_stream.setFormatter(formatter)
         console_stream.setLevel(30)
 
+        logging.getLogger().setLevel(20)
         logging.getLogger().addHandler(file_stream)
         logging.getLogger().addHandler(console_stream)
 
