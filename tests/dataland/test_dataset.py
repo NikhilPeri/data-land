@@ -2,16 +2,11 @@ import pytest
 
 import os
 import pandas as pd
-from dataland.dataset import IncrementalDataset, incremental_timestamp
+from dataland.dataset import IncrementalDataset
 
 @pytest.fixture
 def dataset():
     return pd.DataFrame({'col_a': [1, 2, 3], 'col_b': [4, 5, 6]})
-
-
-@pytest.mark.freeze_time('2018-04-20 16:20:00.012')
-def test_incremental_timestamp():
-    assert incremental_timestamp() == '2018-04-20-1620'
 
 class TestIncrementalDataset(object):
     def test_creates_new_local_dataset(self):

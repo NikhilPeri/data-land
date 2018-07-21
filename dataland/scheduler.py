@@ -58,17 +58,6 @@ class Scheduler(object):
             if history != None:
                 self.history.update(history)
 
-    def _configure_logging(self, namespace):
-        logging.basicConfig(
-            format='[%(levelname)s] %(asctime)s.%(msecs)03d | %(message)s',
-            datefmt='%Y-%m-%d %I:%M:%-S',
-            level=20
-        )
-        file_stream = logging.StreamHandler(stream=timestamped_file(namespace, type='log', mode='a+'))
-        console_stream = logging.StreamHandler(stream=sys.stdout)
-        logging.getLogger().addHandler(file_stream)
-        logging.getLogger().addHandler(console_stream)
-
     def _pending_jobs(self):
         jobs = {}
         for name, job in self.schedule.items():
@@ -82,6 +71,22 @@ class Scheduler(object):
                 jobs[name] = job
 
         return jobs
+
+
+    def _configure_logging(self, namespace):
+        formatter = logging.Formatter(
+            fmt='[%(levelname)s] %(asctime)s.%(msecs)03d | %(message)s',
+            datefmt='%Y-%m-%d %I:%M:%-S'
+        )
+        file_stream = logging.StreamHandler(stream=timestamped_file(namespace, type='log', mode='a+'))
+        file_stream.setFormatter(formatter)
+        file_stream.setLevel(20)
+        console_stream = logging.StreamHandler(stream=sys.stdout)
+        console_stream.setFormatter(formatter)
+        console_stream.setLevel(30)
+
+        logging.getLogger().addHandler(file_stream)
+        logging.getLogger().addHandler(console_stream)
 
 if __name__ == '__main__':
     Scheduler().run()
