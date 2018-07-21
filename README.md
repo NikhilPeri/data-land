@@ -1,13 +1,7 @@
 # Purpose
-This spawned from my [Proline](https://github.com/NikhilPeri/proline) project out of the
-need to run a webscraper and prediction pipeline with 100% uptime, and my crontabs were not cutting it.
+Dataland is a place where you can easily schedule jobs to perform any data processing task
+at a "Hacker scale".  Without the need for costly cloud computing resources, dataland schedules
+recurring jobs to run on your local machine during those extra clock cycles.
 
-# Stack
-- Heroku App with PostgreSQL Database
-- Heroku Scheduler for job scheduling 
-- Twilio for notifications
-- Jupyter notebooks for reports and studies
-
-# Current Projects
-- Proline data collection and predictions
-- Stock Market anomaly monitoring
+It is a great tool to run recurring data processing tasks with support for incremental
+datasets
