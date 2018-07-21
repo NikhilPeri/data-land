@@ -26,26 +26,39 @@ class Job(object):
 
 class Scheduler(object):
     def __init__(self, schedule_file='config/schedule.yml', log_dir='logs'):
+        self.log_dir = log_dir
+
         self._load_schedule(schedule_file)
-        self._load_schedule_history(os.path.join(log_dir, 'history'))
-        self._configure_logging(os.path.join(log_dir, 'scheduler'))
+        self._load_schedule_history()
 
     def run(self):
-        for name, job in self._pending_jobs().items():
+        pending_jobs = self._pending_jobs()
+        if len(pending_jobs) == 0:
+            return
+
+        self._configure_logging()
+        for name, job in pending_jobs.items():
             try:
                 module = importlib.import_module(job['module'])
+                logging.info('Scheduler running {}'.format(job['module']))
                 module.job.run()
             except Exception as e:
-                logging.error()
+                self._mark_job_failure(name)
+                logging.error('Scheduler failed {}'.format(job['module']))
+                logging.error(e.message)
 
-            logging.shutdown()
+            self._mark_job_sucess(name)
+            logging.info('Scheduler succedded {}'.format(job['module']))
+
+        self._save_schedule_history()
+        logging.shutdown()
 
 
     def _load_schedule(self, file):
         with open(file, 'r') as schedule:
             self.schedule = yaml.load(schedule)
 
-    def _load_schedule_history(self, history_dir):
+    def _load_schedule_history(self):
         self.history = {}
         for job_name in self.schedule.keys():
             self.history[job_name] = {
@@ -53,10 +66,14 @@ class Scheduler(object):
                 'status': None
             }
 
-        with lastest_file(history_dir, type='yml') as schedule_history:
+        with lastest_file(os.path.join(self.log_dir, 'history'), type='yml', mode='r') as schedule_history:
             history = yaml.load(schedule_history)
             if history != None:
                 self.history.update(history)
+
+    def _save_schedule_history(self):
+        with timestamped_file(os.path.join(self.log_dir, 'history'), type='yml', mode='w+') as schedule_file:
+            schedule_file.write(yaml.dump(self.history, default_flow_style=False))
 
     def _pending_jobs(self):
         jobs = {}
@@ -69,16 +86,23 @@ class Scheduler(object):
             next_run = datetime.strptime(self.history[name]['last_run'], DATETIME_FORMAT) + FREQUENCY_MAPINGS[job['frequency']]
             if datetime.now() > next_run or self.history[name]['status'] != SUCCESS_STATUS:
                 jobs[name] = job
-
+        logging.info('Scheduler has {} pending job(s)'.format(len(jobs)))
         return jobs
 
+    def _mark_job_sucess(self, job_name):
+        self.history[job_name]['last_run'] = datetime.strftime(datetime.now(), DATETIME_FORMAT)
+        self.history[job_name]['status'] = SUCCESS_STATUS
 
-    def _configure_logging(self, namespace):
+    def _mark_job_failure(self, job_name):
+        self.history[job_name]['last_run'] = datetime.strftime(datetime.now(), DATETIME_FORMAT)
+        self.history[job_name]['status'] = FAILURE_STATUS
+
+    def _configure_logging(self):
         formatter = logging.Formatter(
             fmt='[%(levelname)s] %(asctime)s.%(msecs)03d | %(message)s',
             datefmt='%Y-%m-%d %I:%M:%-S'
         )
-        file_stream = logging.StreamHandler(stream=timestamped_file(namespace, type='log', mode='a+'))
+        file_stream = logging.StreamHandler(stream=timestamped_file(os.path.join(self.log_dir, 'scheduler'), type='log', mode='a+'))
         file_stream.setFormatter(formatter)
         file_stream.setLevel(20)
         console_stream = logging.StreamHandler(stream=sys.stdout)
