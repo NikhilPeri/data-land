@@ -12,16 +12,3 @@ def lastest_file(dir, type='csv', mode='r+'):
     files = [file for file in os.listdir(dir) if file.endswith(type)]
     filepath = os.path.join(dir, sorted(files)[-1])
     return open(filepath, mode)
-
-class Storage(object):
-    def open_file(filename):
-        raise NotImplemented
-
-    def save_file(file):
-        raise NotImplemented
-
-class LocalStorage(Storage):
-    def open_file(filename):
-
-class GCloudStorage(Storage):
-    def __init__(self, )
