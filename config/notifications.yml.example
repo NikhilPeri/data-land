@@ -1,0 +1,7 @@
+mailgun_apikey: 'YOUR MAILGUN APIKEY'
+mailgun_domain: 'YOUR MAILGUN DOMAIN'
+topics:
+  scheduler_errors:
+    title: 'Scheduler Error Report'
+    subscribers:
+      - owner.email@gmail.com

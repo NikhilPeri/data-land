@@ -5,3 +5,4 @@ psycopg2-binary
 sqlalchemy
 jupyter
 pytest-freezegun
+markdown2
