@@ -1,46 +1,41 @@
 import os
 import yaml
 import requests
-from requests.auth import HTTPBasicAuth
-
 from markdown2 import markdown
 
-NOTIFICATION_CONFIG = 'config/notifications.yml'
+from requests.auth import HTTPBasicAuth
+
+from dataland import get_secret, NOTIFICATION_CONFIG
+
 MAILGUN_URL = 'https://api.mailgun.net/v3'
 MAILGUN_USER = 'api'
 
-class NotificationInterface(object):
-    def notify(self, topic, markdown_body):
-        raise NotImplemented
-
-class MailgunNotification(NotificationInterface):
-    def __init__(self):
-        with open(NOTIFICATION_CONFIG, 'r') as notification_config:
-            config = yaml.load(notification_config)
-            self.apikey = config['mailgun_apikey']
-            self.domain = config['mailgun_domain']
-            self.topics = config['topics']
-
-    def notify(self, topic_name, markdown_body):
-        if not self.topics.has_key(topic_name):
+def email_notification(topic_name, markdown_body):
+    topic = None
+    with open(NOTIFICATION_CONFIG, 'r') as notification_config:
+        topics = yaml.load(notification_config)
+        if not topics.has_key(topic_name):
             raise ValueError("Could find topic '{}' in {}".format(topic_name, NOTIFICATION_CONFIG))
+        topic = topics[topic_name]
 
-        topic = self.topics[topic_name]
-        payload = {
-            'from': "dataland@{}".format(self.domain),
-            'to': topic['subscribers'],
-            'subject': topic['title'],
-            'text': markdown_body,
-            'html': markdown(markdown_body),
-        }
+    apikey = get_secret('mailgun_apikey')
+    domain = get_secret('mailgun_domain')
 
-        if os.environ.has_key('DATALAND_TEST') and os.environ['DATALAND_TEST'] == 'TRUE':
-            return payload
+    payload = {
+        'from': "dataland@{}".format(domain),
+        'to': topic['subscribers'],
+        'subject': topic['title'],
+        'text': markdown_body,
+        'html': markdown(markdown_body),
+    }
 
-        response = requests.post(
-            "{}/{}/messages".format(MAILGUN_URL, self.domain),
-            auth=HTTPBasicAuth(MAILGUN_USER, self.apikey),
-            data=payload
-        )
-        if not response.ok:
-            logger.error('Could not send notification on topic: {}'.format(topic_name))
+    if os.environ.has_key('DATALAND_TEST') and os.environ['DATALAND_TEST'] == 'TRUE':
+        return payload
+
+    response = requests.post(
+        "{}/{}/messages".format(MAILGUN_URL, domain),
+        auth=HTTPBasicAuth(MAILGUN_USER, apikey),
+        data=payload
+    )
+    if not response.ok:
+        logger.error('Could not send notification on topic: {}'.format(topic_name))
