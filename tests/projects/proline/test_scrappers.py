@@ -110,3 +110,30 @@ def test_fetches_and_creates_new_games():
     assert game.t == 2.5
     assert game.h == 1.75
     assert game.h_plus == 2.4
+    
+@responses.activate
+def test_fetches_and_creates_new_games():
+    responses.add(
+        responses.GET,
+        'https://www.proline.ca/olg-proline-services/rest/api/proline/events/all.json',
+        status=200,
+        json=mock_reponse())
+
+    UpdateTickets.perform()
+
+    db = Database.get_session()
+    game = db.query(ProlineGames).first()
+
+    assert db.query(ProlineGames).count() == 1
+    assert game.ticket_id == 1
+    assert game.handle == 36
+    assert game.cutoff_date == 'hi'
+    assert game.home == 'LA ANAHEIM'
+    assert game.visitor == 'NEW YORK-Y'
+    assert game.sport == 'NEW YORK-Y'
+    assert game.outcomes == ''
+    assert game.v_plus == 2.1
+    assert game.v == 1.65
+    assert game.t == 2.5
+    assert game.h == 1.75
+    assert game.h_plus == 2.4

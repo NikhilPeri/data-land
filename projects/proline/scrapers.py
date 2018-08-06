@@ -37,7 +37,7 @@ class ScrapeResults(object):
         return json.loads(response)['response']['results']['resultList']
 
 
-class ScrapeTickets(object):
+class ScrapeOdds(object):
     def run(self, output):
         for ticket in self.fetch_ticket_list():
             self.create_ticket(ticket)
