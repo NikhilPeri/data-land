@@ -8,7 +8,7 @@ import tensorflow as tf
 from dataland.file_utils import incremental_timestamp
 from sklearn.model_selection import train_test_split
 
-INPUT_COLUMNS=['h_plus', 'h', 't', 'v', 'v_plus']
+INPUT_COLUMNS=['sport', 'h_plus', 'h', 't', 'v', 'v_plus']
 OUTPUT_COLUMNS=['outcome_h_plus', 'outcome_h', 'outcome_t', 'outcome_v', 'outcome_v_plus']
 
 class Train(object):
@@ -18,13 +18,14 @@ class Train(object):
         logging.info('Test size: {}'.format(len(input_test)))
 
         feature_columns = [
+            tf.feature_column.indicator_column(tf.feature_column.categorical_column_with_vocabulary_list('sport', input_train.sport.unique())),
             tf.feature_column.numeric_column('h_plus', dtype=tf.float32),
             tf.feature_column.numeric_column('h', dtype=tf.float32),
             tf.feature_column.numeric_column('t', dtype=tf.float32),
             tf.feature_column.numeric_column('v', dtype=tf.float32),
             tf.feature_column.numeric_column('v_plus', dtype=tf.float32),
         ]
-
+        '''
         estimator = self.build_estimator(
             feature_columns,
             OUTPUT_COLUMNS,
@@ -36,7 +37,7 @@ class Train(object):
             y=output_train[OUTPUT_COLUMNS].astype(np.float32).values,
             num_epochs=100,
             num_threads=1,
-            shuffle=True,
+            shuffle=False,
         ))
 
         print estimator.evaluate(input_fn=tf.estimator.inputs.numpy_input_fn(
@@ -44,8 +45,9 @@ class Train(object):
             y=output_test[OUTPUT_COLUMNS].astype(np.float32).values,
             num_epochs=1,
             num_threads=1,
-            shuffle=True,
+            shuffle=False,
         ))
+        '''
 
 
     def build_estimator(self, feature_columns, label_values, model_dir):
@@ -54,7 +56,7 @@ class Train(object):
             label_count = len(params['labels'])
 
             input_layer = tf.feature_column.input_layer(features, params['feature_columns'])
-            output_layer = tf.layers.dense(input_layer, units=label_count)
+            output_layer = tf.layers.dense(input_layer, units=label_count, kernel_regularizer=tf.nn.l2_loss)
 
             loss = tf.nn.sigmoid_cross_entropy_with_logits(
                 logits=output_layer,
@@ -74,10 +76,13 @@ class Train(object):
                 )
             elif mode == tf.estimator.ModeKeys.EVAL:
                 predictions = tf.nn.sigmoid(output_layer)
+                ACTIVATION_THRESHOLDS = [0.5, 0.6, 0.7, 0.8, 0.9]
                 metrics = {
                     'mean_cosine_distance': tf.metrics.mean_cosine_distance(labels, predictions, 1),
                     'mean_squared_error': tf.metrics.mean_squared_error(labels, predictions),
-                    'mean_per_class_accuracy': tf.metrics.mean_per_class_accuracy(labels, tf.round(predictions), label_count)
+                    'mean_per_class_accuracy': tf.metrics.mean_per_class_accuracy(labels, tf.round(predictions), label_count),
+                    'precision_at_threshold': tf.metrics.precision_at_thresholds(labels, predictions, ACTIVATION_THRESHOLDS),
+                    'recall_at_threshold': tf.metrics.recall_at_thresholds(labels, predictions, ACTIVATION_THRESHOLDS),
                 }
                 return tf.estimator.EstimatorSpec(mode, loss=loss, eval_metric_ops=metrics)
 
@@ -87,7 +92,7 @@ class Train(object):
             params={
                 'feature_columns': feature_columns,
                 'labels': label_values,
-                'optimizer': tf.train.AdamOptimizer(learning_rate=0.1)
+                'optimizer': tf.train.AdamOptimizer()
         })
 
 
@@ -108,8 +113,9 @@ class Train(object):
         return train_test_split(
             training_set[INPUT_COLUMNS],
             training_set[OUTPUT_COLUMNS],
-            test_size = 0.25,
-            random_state = 0
+            test_size = 0.3,
+            random_state = 0,
+            shuffle=False
         )
 
 if __name__ == '__main__':
