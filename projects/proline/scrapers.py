@@ -2,18 +2,61 @@ import requests
 import json
 from datetime import datetime
 
-from app.datasets.database import Database
-from app.datasets.proline import ProlineTicket, ProlineGame
+from dataland.scheduler import AppendOperation
 
-class ScrapeResults(object):
-    def run(self, output):
-        for ticket_data in self.fetch_ticket_result_data():
-            ticket = self.db.query(ProlineTickets).filter_by(handle=ticket_data['listNumber']).first()
-            for game_data in ticket_data['results']:
-                game = self.db.query(ProlineGames).filter_by(ticket_id=ticket.id, handle=game_data['']).first()
-                game.outcomes = self.parse_outcomes(game_data['odds'])
-                self.save_record(game)
 
+class ScrapeOdds(AppendOperation):
+    INPUT = 'data/proline/odds.csv'
+
+    def new_records(self):
+        odds = self.get_template()
+
+        for ticket in self.fetch_ticket_list():
+            ticket_handle = int(ticket['listNumber'])
+            for game in ticket['eventList']:
+                record = {
+                    'ticket_handle': ticket_handle,
+                    'game_handle': int(game['id']),
+                    'h_plus': float(game['odds']['hplus']) if game['odds']['hplus'] != None else 0.0,
+                    'h': float(game['odds']['h']) if game['odds']['h'] != None else 0.0,
+                    't': float(game['odds']['t']) if game['odds']['t'] != None else 0.0,
+                    'v': float(game['odds']['v']) if game['odds']['v'] != None else 0.0,
+                    'v_plus': float(game['odds']['vplus']) if game['odds']['vplus'] != None else 0.0,
+                    'home': game['homeName'].strip(),
+                    'visitor': game['visitorName'].strip(),
+                    'cutoff_date': datetime.strptime(game['cutoffDate'], '%Y-%m-%d %H:%M:%S.0'),
+                    'sport': game['sport'].strip()
+                }
+                odds = odds.append(record, ignore_index=True)
+
+        return odds
+
+    def fetch_ticket_list(self):
+        OLG_TICKETS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/events/all.json"
+        response = requests.get(OLG_TICKETS_ENDPOINT, verify=False).text
+        return json.loads(response)['events']['eventList']
+
+class ScrapeResults(AppendOperation):
+    INPUT = 'data/proline/results.csv'
+
+    def new_records(self):
+        results = self.get_template()
+
+        for ticket in self.fetch_ticket_results():
+            ticket_handle = int(ticket['listNumber'])
+            for game in ticket['results']:
+                record = {
+                    'ticket_handle': ticket_handle,
+                    'game_handle': int(game['id']),
+                    'outcome_h_plus': 1 if game['odds']['hplus'] != None else 0,
+                    'outcome_h': 1 if game['odds']['h'] != None else 0,
+                    'outcome_t': 1 if game['odds']['t'] != None else 0,
+                    'outcome_v': 1 if game['odds']['v'] != None else 0,
+                    'outcome_v_plus': 1 if game['odds']['vplus'] != None else 0,
+                }
+                results = results.append(record, ignore_index=True)
+
+        return results
 
     def parse_outcomes(self, raw_outcomes):
         results = []
@@ -29,59 +72,9 @@ class ScrapeResults(object):
             results.append('h')
         return results
 
-    def fetch_ticket_result_data(self):
+    def fetch_ticket_results(self):
         OLG_RESULTS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/results/all.jsonp?callback=_jqjsp"
         response = requests.get(OLG_RESULTS_ENDPOINT, verify=False).text
         response = response.replace('_jqjsp(', '', 1)
         response = response.replace(');', '', 1)
         return json.loads(response)['response']['results']['resultList']
-
-
-class ScrapeOdds(object):
-    def run(self, output):
-        for ticket in self.fetch_ticket_list():
-            self.create_ticket(ticket)
-
-    def create_ticket(self, ticket_data):
-        ticket_handle = int(ticket_data['listNumber'])
-        ticket_date = datetime.fromtimestamp(ticket_data['listDate']/1000)
-
-        ticket = ProlineTicket(handle=ticket_handle, date=ticket_date)
-
-        self.save_record(ticket)
-        ticket = self.db.query(ProlineGame).filter_by(handle=ticket.handle).first()
-
-        if ticket.id != None:
-            for game_data in ticket_data['eventList']:
-                self.create_game(ticket, game_data)
-        else:
-            print('missing ticket')
-            return
-
-    def create_game(self, ticket, game_data):
-        v_plus = float(game_data['odds']['vplus']) if game_data['odds']['vplus'] != None else 0.0
-        v = float(game_data['odds']['v']) if game_data['odds']['v'] != None else 0.0
-        t = float(game_data['odds']['t']) if game_data['odds']['t'] != None else 0.0
-        h = float(game_data['odds']['h']) if game_data['odds']['h'] != None else 0.0
-        h_plus = float(game_data['odds']['hplus']) if game_data['odds']['hplus'] != None else 0.0
-
-        game = ProlineGame(
-            ticket_id=ticket.id,
-            handle=game_data['id'],
-            cutoff_date=datetime.strptime(game_data['cutoffDate'], '%Y-%m-%d %H:%M:%S.0'),
-            home=game_data['homeName'].strip(),
-            visitor=game_data['visitorName'].strip(),
-            sport=game_data['sport'].strip(),
-            v_plus=v_plus,
-            v=v,
-            t=t,
-            h=h,
-            h_plus=h_plus
-        )
-        self.save_record(game)
-
-
-    def fetch_ticket_list(self):
-        OLG_TICKETS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/events/all.json"
-        response = requests.get(OLG_TICKETS_ENDPOINT, verify=False).text
-        return json.loads(response)['events']['eventList']

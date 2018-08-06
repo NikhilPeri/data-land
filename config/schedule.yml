@@ -1,3 +1,4 @@
-sample_job:
+proline_job:
   frequency: daily
-  module: 'jobs.sample_job'
+  after: 07:00
+  module: 'projects.proline.job'

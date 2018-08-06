@@ -6,6 +6,7 @@ import importlib
 
 from datetime import timedelta, datetime, time
 from dataland.file_utils import lastest_file, timestamped_file
+from dataland.dataset import get_template
 
 DATETIME_FORMAT = '%Y-%m-%d-%H%M'
 FREQUENCY_MAPINGS = {
@@ -21,8 +22,43 @@ SUCCESS_STATUS = 'SUCCESS'
 FAILURE_STATUS = 'FAILED'
 
 class Job(object):
-    def run(self):
+    def run(self, operations=[]):
+        for operation in operations:
+            operation.perform()
+
+class Operation(object):
+    def perform(self):
         raise NotImplemented
+
+class AppendOperation(Operation):
+    INPUT = ''
+    IGNORE_DUPLICATES=True # requires full dataset to be read into memory
+
+    def perform(self):
+        if not os.path.isfile(self.__class__.INPUT):
+            raise ValueError('Operation INPUT "{}" is not a valid path'.format(INPUT))
+
+
+        new_records = self.new_records()
+
+        if self.__class__.IGNORE_DUPLICATES:
+            old_records = pd.read_csv(self.__class__.INPUT)
+            new_records = old_records.concat(new_records).drop_duplicates()
+
+        assert new_records.columns ==  self.get_template().columns, 'new_records do not match existing data template'
+        with open(INPUT, 'a') as input_file:
+            new_data.to_csv(input_file, header=False)
+
+        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(new_data), self.__class__.INPUT))
+
+    def new_records(self):
+        raise NotImplemented
+        '''
+        returns a dataframe containing new records to be appended
+        '''
+
+    def get_template(self):
+        return get_template(self.__class__.INPUT)
 
 class Scheduler(object):
     def __init__(self, schedule_file='config/schedule.yml', log_dir='logs'):

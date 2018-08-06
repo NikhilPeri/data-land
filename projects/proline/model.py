@@ -5,14 +5,15 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from dataland.scheduler import Operation
 from dataland.file_utils import incremental_timestamp
 from sklearn.model_selection import train_test_split
 
 INPUT_COLUMNS=['sport', 'h_plus', 'h', 't', 'v', 'v_plus']
 OUTPUT_COLUMNS=['outcome_h_plus', 'outcome_h', 'outcome_t', 'outcome_v', 'outcome_v_plus']
 
-class Train(object):
-    def run(self):
+class Train(Operation):
+    def perform(self):
         input_train, input_test, output_train, output_test = self.build_train_test_set()
         logging.info('Train size: {}'.format(len(input_train)))
         logging.info('Test size: {}'.format(len(input_test)))
@@ -25,7 +26,7 @@ class Train(object):
             tf.feature_column.numeric_column('v', dtype=tf.float32),
             tf.feature_column.numeric_column('v_plus', dtype=tf.float32),
         ]
-        '''
+
         estimator = self.build_estimator(
             feature_columns,
             OUTPUT_COLUMNS,
@@ -47,8 +48,6 @@ class Train(object):
             num_threads=1,
             shuffle=False,
         ))
-        '''
-
 
     def build_estimator(self, feature_columns, label_values, model_dir):
 
@@ -62,7 +61,7 @@ class Train(object):
                 logits=output_layer,
                 labels=labels
             )
-            loss = tf.reduce_mean(loss)
+            loss = tf.reduce_sum(loss)
 
             if mode == tf.estimator.ModeKeys.PREDICT:
                 predictions = tf.nn.softmax(output_layer)
@@ -115,8 +114,9 @@ class Train(object):
             training_set[OUTPUT_COLUMNS],
             test_size = 0.3,
             random_state = 0,
-            shuffle=False
+            shuffle=True
         )
 
-if __name__ == '__main__':
-    Train().run()
+class Predict(Operation):
+    def perform(self):
+        pass
