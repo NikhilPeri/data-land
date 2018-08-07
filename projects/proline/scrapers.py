@@ -58,20 +58,6 @@ class ScrapeResults(AppendOperation):
 
         return results
 
-    def parse_outcomes(self, raw_outcomes):
-        results = []
-        if raw_results['vplus'] is not None:
-            results.append('v+')
-        if raw_results["v"] is not None:
-            results.append('v')
-        if raw_results["t"] is not None:
-            results.append('t')
-        if raw_results["hplus"] is not None:
-            results.append('h+')
-        if raw_results["h"] is not None:
-            results.append('h')
-        return results
-
     def fetch_ticket_results(self):
         OLG_RESULTS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/results/all.jsonp?callback=_jqjsp"
         response = requests.get(OLG_RESULTS_ENDPOINT, verify=False).text
