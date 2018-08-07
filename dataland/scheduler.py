@@ -23,8 +23,11 @@ SUCCESS_STATUS = 'SUCCESS'
 FAILURE_STATUS = 'FAILED'
 
 class Job(object):
-    def run(self, operations=[]):
-        for operation in operations:
+    def __init__(self, operations=[]):
+        self.operations = operations
+        
+    def run(self):
+        for operation in self.operations:
             operation.perform()
 
 class Operation(object):

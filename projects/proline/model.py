@@ -38,9 +38,9 @@ class Train(Operation):
         estimator.train(input_fn=tf.estimator.inputs.numpy_input_fn(
             { k: np.array(v) for k, v in input_train[INPUT_COLUMNS].to_dict(orient='list').items() },
             y=output_train[OUTPUT_COLUMNS].astype(np.float32).values,
-            num_epochs=100,
+            num_epochs=200,
             num_threads=1,
-            shuffle=False,
+            shuffle=True,
         ))
 
         print estimator.evaluate(input_fn=tf.estimator.inputs.numpy_input_fn(
@@ -153,6 +153,7 @@ class Predict(Operation):
                 ticket handle {}
                 expected value: {}
                 selected games: {}
+                selected_sports: {}
                 selected_outcomes: {}
                 game payouts: {}
                 game probabilities: {}
@@ -161,6 +162,7 @@ class Predict(Operation):
                 ticket['ticket_handle'],
                 ticket['expected_value'],
                 ticket['selected_games'],
+                ticket['selected_sports'],
                 ticket['selected_outcomes'],
                 ticket['payouts'],
                 ticket['probabilities']
@@ -169,6 +171,7 @@ class Predict(Operation):
         email_notification('proline_predictions', notification)
 
     def predict_outcomes(self, odds):
+        odds = odds.reset_index(drop=True)
         with tf.Session() as sess:
             prediction_instances = { k: map(lambda x: [x], v) for k, v in odds[INPUT_COLUMNS].to_dict(orient='list').items() }
             predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_subdirectory('data/proline/models'), 'export'))
@@ -177,7 +180,7 @@ class Predict(Operation):
 
         return odds
 
-    def compute_best_ticket_combinations(self, odds, game_count=3, max_games_to_consider=5):
+    def compute_best_ticket_combinations(self, odds, game_count=3, max_games_to_consider=25):
         ticket_combinations = pd.DataFrame()
 
         for handle, games in odds.groupby('ticket_handle'):
@@ -201,6 +204,7 @@ class Predict(Operation):
                     best_ticket = {
                         'ticket_handle': int(handle),
                         'selected_games': game_set['game_handle'].values,
+                        'selected_sports': game_set['sport'].values,
                         'selected_outcomes': game_set['maximum_likelyhood'].values,
                         'probabilities': game_set['probability'].values,
                         'payouts': game_set['payout'].values,
@@ -212,4 +216,4 @@ class Predict(Operation):
         return ticket_combinations
 
 if __name__ == '__main__':
-    Predict().perform()
+    Train().perform()
