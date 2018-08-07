@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ~/github.com/NikhilPeri/data-land
+python -m dataland.scheduler
