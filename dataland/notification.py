@@ -21,6 +21,7 @@ def email_notification(topic_name, markdown_body):
     apikey = get_secret('mailgun_apikey')
     domain = get_secret('mailgun_domain')
 
+    markdown_body = markdown_body.strip()
     payload = {
         'from': "dataland@{}".format(domain),
         'to': topic['subscribers'],

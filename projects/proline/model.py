@@ -1,11 +1,13 @@
 import os
 import logging
+import itertools
 import pandas as pd
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 from dataland.scheduler import Operation
+from dataland.notification import email_notification
 from dataland.file_utils import incremental_timestamp, latest_subdirectory
 from sklearn.model_selection import train_test_split
 
@@ -116,8 +118,8 @@ class Train(Operation):
 
 
     def build_train_test_set(self):
-        odds = pd.read_csv('data/proline/odds.csv')
-        results = pd.read_csv('data/proline/results.csv')
+        odds = pd.read_csv('data/proline/odds.csv').drop_duplicates()
+        results = pd.read_csv('data/proline/results.csv').drop_duplicates()
 
         results = results[
             (results['outcome_h_plus'] == 1) |
@@ -127,7 +129,7 @@ class Train(Operation):
             (results['outcome_v_plus'] == 1)
         ]
 
-        training_set = pd.merge(results, odds, on=['ticket_handle', 'game_handle'], how='left')
+        training_set = pd.merge(results, odds, on=['ticket_handle', 'game_handle'], how='inner')
 
         return train_test_split(
             training_set[INPUT_COLUMNS],
@@ -140,17 +142,74 @@ class Train(Operation):
 class Predict(Operation):
     def perform(self):
         odds = pd.read_csv('data/proline/odds.csv')
-        odds = odds[odds['cutoff_date'] > str(pd.Timestamp.now())]
+        odds = odds[odds['cutoff_date'] > str(pd.Timestamp.now())].reset_index(drop=True)
+        odds = self.predict_outcomes(odds)
 
-        predicted_outcomes = None
+        tickets = self.compute_best_ticket_combinations(odds)
+        notification = ''
+        for _, ticket in tickets.iterrows():
+            notification += '''
+                __Proline Ticket for {}__\n
+                ticket handle {}
+                expected value: {}
+                selected games: {}
+                selected_outcomes: {}
+                game payouts: {}
+                game probabilities: {}
+            '''.format(
+                incremental_timestamp(),
+                ticket['ticket_handle'],
+                ticket['expected_value'],
+                ticket['selected_games'],
+                ticket['selected_outcomes'],
+                ticket['payouts'],
+                ticket['probabilities']
+            )
+
+        email_notification('proline_predictions', notification)
+
+    def predict_outcomes(self, odds):
         with tf.Session() as sess:
-            prediction_instances = { k: map(lambda x: v) for k, v in odds[INPUT_COLUMNS].to_dict(orient='list').items() }
+            prediction_instances = { k: map(lambda x: [x], v) for k, v in odds[INPUT_COLUMNS].to_dict(orient='list').items() }
             predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_subdirectory('data/proline/models'), 'export'))
 
-            predicted_outcomes = predictor(prediction_instances)
+            odds = odds.merge(pd.DataFrame(predictor(prediction_instances)), left_index=True, right_index=True)
 
-        import pdb; pdb.set_trace()
+        return odds
+
+    def compute_best_ticket_combinations(self, odds, game_count=3, max_games_to_consider=5):
+        ticket_combinations = pd.DataFrame()
+
+        for handle, games in odds.groupby('ticket_handle'):
+            games['maximum_likelyhood'] = games[OUTPUT_COLUMNS].idxmax(axis=1)
+            games['probability'] = games[OUTPUT_COLUMNS].max(axis=1)
+            games['payout'] = games.apply(lambda row: row[row['maximum_likelyhood'].replace('outcome_', '')], axis=1)
+
+            games = games.sort_values('probability', ascending=False).head(max_games_to_consider)
+
+            best_ticket = None
+            best_expected_value = float('-inf')
+
+            for game_set in itertools.combinations(games['game_handle'].values, game_count):
+                game_set = games[games['game_handle'].isin(game_set)]
+                total_payout = game_set['payout'].sum()
+                probability = game_set['probability'].product()
+                expected_value = probability*total_payout - (1 - probability)
+
+                if best_expected_value < expected_value:
+                    best_expected_value = expected_value
+                    best_ticket = {
+                        'ticket_handle': int(handle),
+                        'selected_games': game_set['game_handle'].values,
+                        'selected_outcomes': game_set['maximum_likelyhood'].values,
+                        'probabilities': game_set['probability'].values,
+                        'payouts': game_set['payout'].values,
+                        'expected_value': probability*total_payout - (1 - probability)
+                    }
+
+            ticket_combinations = ticket_combinations.append(best_ticket, ignore_index=True)
+
+        return ticket_combinations
 
 if __name__ == '__main__':
-    Train().perform()
     Predict().perform()

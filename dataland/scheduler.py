@@ -3,6 +3,7 @@ import sys
 import yaml
 import logging
 import importlib
+import pandas as pd
 
 from datetime import timedelta, datetime, time
 from dataland.file_utils import lastest_file, timestamped_file
@@ -32,7 +33,7 @@ class Operation(object):
 
 class AppendOperation(Operation):
     INPUT = ''
-    IGNORE_DUPLICATES=True # requires full dataset to be read into memory
+    IGNORE_DUPLICATES=False # requires full dataset to be read into memory
 
     def perform(self):
         if not os.path.isfile(self.__class__.INPUT):
@@ -42,14 +43,16 @@ class AppendOperation(Operation):
         new_records = self.new_records()
 
         if self.__class__.IGNORE_DUPLICATES:
+            # TODO this does not work as expected
+            # it should read the old dataframe and only select new records
             old_records = pd.read_csv(self.__class__.INPUT)
             new_records = old_records.concat(new_records).drop_duplicates()
 
-        assert new_records.columns ==  self.get_template().columns, 'new_records do not match existing data template'
-        with open(INPUT, 'a') as input_file:
-            new_data.to_csv(input_file, header=False)
+        assert (new_records.columns.values ==  self.get_template().columns.values).all(), 'new_records do not match existing data template'
+        with open(self.__class__.INPUT, 'a') as input_file:
+            new_records.to_csv(input_file, header=False, index=False)
 
-        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(new_data), self.__class__.INPUT))
+        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(new_records), self.__class__.INPUT))
 
     def new_records(self):
         raise NotImplemented
