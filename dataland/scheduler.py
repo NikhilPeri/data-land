@@ -25,7 +25,7 @@ FAILURE_STATUS = 'FAILED'
 class Job(object):
     def __init__(self, operations=[]):
         self.operations = operations
-        
+
     def run(self):
         for operation in self.operations:
             operation.perform()
@@ -65,6 +65,28 @@ class AppendOperation(Operation):
 
     def get_template(self):
         return get_template(self.__class__.INPUT)
+
+class UpdateOperation(Operation):
+    INPUT=''
+
+    def perform(self):
+        if not os.path.isfile(self.__class__.INPUT):
+            raise ValueError('Operation INPUT "{}" is not a valid path'.format(INPUT))
+
+        input_dataframe = pd.read_csv(self.__class__.INPUT)
+        input_dataframe = self.update(input_dataframe)
+
+        with open(self.__class__.INPUT, 'a') as input_file:
+            input_dataframe.to_csv(input_file, 'w+', index=False)
+
+        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.INPUT))
+
+    def update(self, input_dataframe):
+        raise NotImplemented
+        '''
+        returns updated version of `input_dataframe`
+        '''
+
 
 class Scheduler(object):
     def __init__(self, schedule_file='config/schedule.yml', log_dir='logs'):
