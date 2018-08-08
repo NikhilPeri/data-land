@@ -77,7 +77,7 @@ class UpdateOperation(Operation):
         input_dataframe = self.update(input_dataframe)
 
         with open(self.__class__.INPUT, 'a') as input_file:
-            input_dataframe.to_csv(input_file, 'w+', index=False)
+            input_dataframe.to_csv(self.__class__.INPUT, mode='w+', index=False, float_format='%.4f')
 
         logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.INPUT))
 
