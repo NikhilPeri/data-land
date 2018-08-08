@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from datetime import timedelta
 
 from dataland.scheduler import Operation
 from dataland.notification import email_notification
@@ -142,7 +143,11 @@ class Train(Operation):
 class Predict(Operation):
     def perform(self):
         odds = pd.read_csv('data/proline/odds.csv')
-        odds = odds[odds['cutoff_date'] > str(pd.Timestamp.now())].reset_index(drop=True)
+        odds = odds[
+            (odds['cutoff_date'] > str(pd.Timestamp.now())) &
+            (odds['cutoff_date'] < str(pd.Timestamp.now().date() + timedelta(days=1)))
+        ].reset_index(drop=True)
+
         odds = self.predict_outcomes(odds)
 
         tickets = self.compute_best_ticket_combinations(odds)
