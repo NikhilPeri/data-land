@@ -9,9 +9,10 @@ class DescribePrices(UpdateOperation):
     def update(self, stock_list):
         for index, company in stock_list.iterrows():
             prices = pd.read_csv('data/stocks/prices/{}.csv'.format(company['Symbol']))
+            prices['daytime_avg'] = (prices['open'] + prices['close']) / 2
             stock_list.at[index, 'price_count'] = len(prices)
 
-            intraday = pd.Series(prices['high'] - prices['low'])[:365].describe()
+            intraday = pd.Series((prices['high'] - prices['low'])/ prices['daytime_avg'])[:365].describe()
             stock_list.at[index, 'intraday_mean'] = intraday['mean']
             stock_list.at[index, 'intraday_stddev'] = intraday['std']
 

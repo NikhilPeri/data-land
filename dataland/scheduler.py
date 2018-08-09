@@ -66,8 +66,9 @@ class AppendOperation(Operation):
     def get_template(self):
         return get_template(self.__class__.INPUT)
 
-class UpdateOperation(Operation):
+class TransformOperation(Operation):
     INPUT=''
+    OUTPUT=''
 
     def perform(self):
         if not os.path.isfile(self.__class__.INPUT):
@@ -77,16 +78,28 @@ class UpdateOperation(Operation):
         input_dataframe = self.update(input_dataframe)
 
         with open(self.__class__.INPUT, 'a') as input_file:
-            input_dataframe.to_csv(self.__class__.INPUT, mode='w+', index=False, float_format='%.4f')
+            input_dataframe.to_csv(self.__class__.OUTPUT, mode='w+', index=False, float_format='%.4f')
 
-        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.INPUT))
+        logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.OUTPUT))
+
+    def transform(self, input_dataframe):
+        raise NotImplemented
+        '''
+        returns new output dataframe
+        '''
+
+class UpdateOperation(TransformOperation):
+
+    def __init__(self, *args, **kwargs):
+        self.__class__.OUTPUT=self.__class__.INPUT
+        self.transform = self.update
+        super(UpdateOperation, self).__init__(*args, **kwargs)
 
     def update(self, input_dataframe):
         raise NotImplemented
         '''
         returns updated version of `input_dataframe`
         '''
-
 
 class Scheduler(object):
     def __init__(self, schedule_file='config/schedule.yml', log_dir='logs'):
