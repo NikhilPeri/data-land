@@ -1,0 +1,3 @@
+[ERROR] 2018-08-11 12:41:7.042 | Scheduler failed projects.proline.job
+[ERROR] 2018-08-11 12:41:7.042 | No module named markdown2
+[INFO] 2018-08-11 12:41:7.043 | Scheduler succedded projects.proline.job

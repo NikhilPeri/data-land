@@ -1,0 +1,5 @@
+[INFO] 2018-08-11 12:42:34.305 | Scheduler running projects.proline.job
+[INFO] 2018-08-11 12:42:34.675 | ScrapeOdds updated 45 records to data/proline/odds.csv
+[INFO] 2018-08-11 12:42:35.164 | ScrapeResults updated 152 records to data/proline/results.csv
+[INFO] 2018-08-11 12:42:36.168 | Restoring parameters from data/proline/models/2018-08-06-2148/export/variables/variables
+[INFO] 2018-08-11 12:42:39.263 | Scheduler succedded projects.proline.job
