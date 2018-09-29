@@ -1,5 +1,11 @@
-import os
-import pandas as pd
+from google.cloud import storage
 
-def get_template(dataset_path):
-    return pd.DataFrame(columns=pd.read_csv(dataset_path, nrows=1).columns)
+global bucket
+bucket = storage.Client()
+
+
+def remove_client():
+    client = None
+
+def get_client():
+    return client
