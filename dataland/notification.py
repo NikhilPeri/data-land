@@ -5,7 +5,7 @@ from markdown2 import markdown
 
 from requests.auth import HTTPBasicAuth
 
-from dataland import get_secret, NOTIFICATION_CONFIG
+from dataland import config, NOTIFICATION_CONFIG
 
 MAILGUN_URL = 'https://api.mailgun.net/v3'
 MAILGUN_USER = 'api'
@@ -18,8 +18,8 @@ def email_notification(topic_name, markdown_body):
             raise ValueError("Could find topic '{}' in {}".format(topic_name, NOTIFICATION_CONFIG))
         topic = topics[topic_name]
 
-    apikey = get_secret('mailgun_apikey')
-    domain = get_secret('mailgun_domain')
+    apikey = config['notification']['mailgun_apikey']
+    domain = config['notification']['mailgun_domain']
 
     markdown_body = markdown_body.strip()
     payload = {
