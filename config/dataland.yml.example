@@ -1,0 +1,8 @@
+storage:
+    gcloud_bucket: <GOOGLE_CLOUD_BUCKET_NAME>
+    gcloud_credentials: <GOOGLE_CLOUD_CREDENTIAL_FILE>
+    local_dir: <LOCAL_FILE_CACHE_DIRECTORY>
+    local_storage_limit: 5G
+notification:
+  mailgun_apikey: <MAILGUN_API_KEY>
+  mailgun_domain: <MAILGUN_DOMAIN>

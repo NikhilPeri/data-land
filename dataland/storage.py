@@ -4,16 +4,13 @@ import hashlib
 import base64
 
 from dataland import config
-from datetime import datetime
+from dataland.utils import timestamp
 from google.cloud import storage
 
 def validate_path(path):
     if path.find('..') is not -1:
         raise ValueError('illegal relative path "{}"'.format(path))
     return path
-
-def timestamp():
-    return datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
 
 class StorageContext(object):
      def __init__(self, storage, filepath, mode):
