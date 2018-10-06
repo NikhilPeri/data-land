@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 
-from dataland.scheduler import UpdateOperation
+from dataland.operations import UpdateOperation
 
 class DescribePrices(UpdateOperation):
     INPUT = 'data/stocks/snp_500_list.csv'

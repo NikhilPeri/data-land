@@ -7,7 +7,7 @@ import pandas as pd
 import tensorflow as tf
 from datetime import timedelta
 
-from dataland.scheduler import Operation
+from dataland.operations import Operation
 from dataland.notification import email_notification
 from dataland.file_utils import incremental_timestamp, latest_subdirectory
 from sklearn.model_selection import train_test_split

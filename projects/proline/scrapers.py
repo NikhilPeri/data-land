@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime
 
-from dataland.scheduler import AppendOperation
+from dataland.operations import AppendOperation
 
 
 class ScrapeOdds(AppendOperation):
