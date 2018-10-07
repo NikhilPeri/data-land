@@ -34,8 +34,7 @@ class Storage(object):
         if not os.environ.has_key('GOOGLE_APPLICATION_CREDENTIALS'):
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config['storage']['gcloud_credentials']
         self.bucket = storage.Client().bucket(config['storage']['gcloud_bucket'])
-        self.local_dir = validate_path(config['storage']['local_dir'])
-        self.local_dir += '/' if not self.local_dir.endswith('/') else ''
+        self.local_dir = os.path.join(os.getcwd(), 'tmp/cache')
 
     def open(self, filepath, mode='r'):
         return StorageContext(self, filepath, mode)
