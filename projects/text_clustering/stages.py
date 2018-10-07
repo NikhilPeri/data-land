@@ -39,8 +39,8 @@ class KMeansCluster(object):
             scored_classes[classes] = math.fabs(k_means.score(data) / (classes+1)**4)
 
         selected_classes = np.argmin(np.gradient(scored_classes))
-        print scored_classes
-        print "Using {} classes".format(selected_classes)
+        #print scored_classes
+        #print "Using {} classes".format(selected_classes)
 
 
         k_means = KMeans(n_clusters=(selected_classes+1))

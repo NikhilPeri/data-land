@@ -8,7 +8,7 @@ import sys
 host = sys.argv[1]
 
 hoststr = 'http://' + host + '/video'
-print 'Streaming ' + hoststr
+# print 'Streaming ' + hoststr
 cap = cv2.VideoCapture(hoststr)
 # params for ShiTomasi corner detection
 feature_params = dict( maxCorners = 100,

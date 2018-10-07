@@ -33,7 +33,7 @@ class Train(Operation):
         estimator = self.build_estimator(
             feature_columns,
             OUTPUT_COLUMNS,
-            os.path.join('data/proline/models', incremental_timestamp())
+            os.path.join('data/proline/models', timestamp())
         )
 
         estimator.train(input_fn=tf.estimator.inputs.numpy_input_fn(
@@ -44,7 +44,7 @@ class Train(Operation):
             shuffle=True,
         ))
 
-        print estimator.evaluate(input_fn=tf.estimator.inputs.numpy_input_fn(
+        estimator.evaluate(input_fn=tf.estimator.inputs.numpy_input_fn(
             { k: np.array(v) for k, v in input_test[INPUT_COLUMNS].to_dict(orient='list').items() },
             y=output_test[OUTPUT_COLUMNS].astype(np.float32).values,
             num_epochs=1,

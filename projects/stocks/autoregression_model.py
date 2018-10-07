@@ -14,12 +14,3 @@ class BuildTrainingSet(TransformOperation):
         train_set = pd.DataFrame(columns=[''])
         for index, company in stock_list.iterrows():
             prices = pd.read_csv('data/stocks/prices/{}.csv'.format(company['Symbol']))
-
-    def build_windowd_set
-
-    series = Series.from_csv('daily-minimum-temperatures.csv', header=0)
-    values = DataFrame(series.values)
-    dataframe = concat([values.shift(1), values], axis=1)
-    dataframe.columns = ['t-1', 't+1']
-    result = dataframe.corr()
-    print(result)

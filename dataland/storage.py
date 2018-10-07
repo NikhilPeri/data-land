@@ -13,10 +13,10 @@ def validate_path(path):
     return path
 
 class StorageContext(object):
-     def __init__(self, storage, filepath, mode):
-         self.storage = storage
-         self.filepath = filepath
-         self.mode = mode
+    def __init__(self, storage, filepath, mode):
+        self.storage = storage
+        self.filepath = filepath
+        self.mode = mode
 
     def __enter__(self):
         self.storage.pull(filepath)

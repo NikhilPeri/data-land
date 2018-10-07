@@ -9,5 +9,4 @@ def split_vocals(mp3_file):
 
     sound_monoR_inv = sound_monoR.invert_phase()
 
-    vocals = 
     beat = sound_monoL.overlay(sound_monoR_inv)
