@@ -5,8 +5,8 @@ SYSTEM_DEPENDENCIES=[
     'git',
     'python',
     'python-pip',
+    'python-dev',
     'systemd',
-    'systemctl',
 ]
 print os.system('sudo apt-get install {}'.format(' '.join(SYSTEM_DEPENDENCIES)))
 
