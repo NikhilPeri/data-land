@@ -7,10 +7,32 @@ import importlib
 
 from time import sleep
 from dataland.utils import timestamp
+from dataland.storage import storage
 
 JOB_BLACKLIST=[
     '__init__.py'
 ]
+
+class Operation(object):
+    INPUTS=[]
+    OUTPUTS=[]
+
+    def __init__(self, env=set([])):
+        self.env = env
+
+    def run(self):
+        for input in self.__class__.INPUTS:
+            if input not in self.env:
+                storage.pull(input)
+                self.env.append(input)
+
+        self.perform()
+
+        self.env += self.__class__.OUTPUTS
+
+    def perform(self):
+        raise NotImplemented
+
 
 class Job(object):
     def __init__(self, sched=[], operations=[]):
@@ -29,6 +51,7 @@ class Job(object):
             logging.info('Job succedded {}'.format(self.module))
         except Exception as e:
             logging.error('Job failed {}'.format(self.module))
+            logging.error(e.message)
 
 def configure_logging():
     formatter = logging.Formatter(

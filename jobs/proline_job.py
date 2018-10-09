@@ -11,3 +11,6 @@ job = Job(
         Predict()
     ]
 )
+
+if __name__ == '__main__':
+    job.run()
