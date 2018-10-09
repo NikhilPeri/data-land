@@ -9,7 +9,8 @@ from datetime import timedelta
 
 from dataland.operations import Operation
 from dataland.notification import email_notification
-from dataland.file_utils import incremental_timestamp, latest_subdirectory
+from dataland.storage import latest_path
+from dataland.utils import timestamp
 from sklearn.model_selection import train_test_split
 
 INPUT_COLUMNS=['sport', 'h_plus', 'h', 't', 'v', 'v_plus']
@@ -179,7 +180,7 @@ class Predict(Operation):
         odds = odds.reset_index(drop=True)
         with tf.Session() as sess:
             prediction_instances = { k: map(lambda x: [x], v) for k, v in odds[INPUT_COLUMNS].to_dict(orient='list').items() }
-            predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_subdirectory('data/proline/models'), 'export'))
+            predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_path('data/proline/models'), 'export'))
 
             odds = odds.merge(pd.DataFrame(predictor(prediction_instances)), left_index=True, right_index=True)
 

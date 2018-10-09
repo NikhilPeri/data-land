@@ -1,5 +1,7 @@
 import requests
 import json
+import pandas as pd
+
 from datetime import datetime
 
 from dataland.operations import AppendOperation
@@ -9,8 +11,7 @@ class ScrapeOdds(AppendOperation):
     INPUT = 'data/proline/odds.csv'
 
     def new_records(self):
-        odds = self.get_template()
-
+        odds = []
         for ticket in self.fetch_ticket_list():
             ticket_handle = int(ticket['listNumber'])
             for game in ticket['eventList']:
@@ -27,9 +28,9 @@ class ScrapeOdds(AppendOperation):
                     'cutoff_date': datetime.strptime(game['cutoffDate'], '%Y-%m-%d %H:%M:%S.0'),
                     'sport': game['sport'].strip()
                 }
-                odds = odds.append(record, ignore_index=True)
+                odds.append(record)
 
-        return odds
+        return pd.DataFrame(odds)
 
     def fetch_ticket_list(self):
         OLG_TICKETS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/events/all.json"
@@ -40,7 +41,7 @@ class ScrapeResults(AppendOperation):
     INPUT = 'data/proline/results.csv'
 
     def new_records(self):
-        results = self.get_template()
+        results = []
 
         for ticket in self.fetch_ticket_results():
             ticket_handle = int(ticket['listNumber'])
@@ -54,9 +55,9 @@ class ScrapeResults(AppendOperation):
                     'outcome_v': 1 if game['odds']['v'] != None else 0,
                     'outcome_v_plus': 1 if game['odds']['vplus'] != None else 0,
                 }
-                results = results.append(record, ignore_index=True)
+                results.append(record)
 
-        return results
+        return pd.DataFrame(results)
 
     def fetch_ticket_results(self):
         OLG_RESULTS_ENDPOINT = "https://www.proline.ca/olg-proline-services/rest/api/proline/results/all.jsonp?callback=_jqjsp"

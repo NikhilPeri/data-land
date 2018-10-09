@@ -2,19 +2,31 @@ import os
 import re
 import hashlib
 import base64
+import pandas as pd
 
 from dataland import config
 from dataland.utils import timestamp
-from google.cloud import storage
+from google.cloud import storage as gcloud_storage
 
 def validate_path(path):
     if path.find('..') is not -1:
         raise ValueError('illegal relative path "{}"'.format(path))
     return path
 
+def latest_path(path, type=''):
+    paths = [p for p in os.listdir(p) if p.endswith(type) ]
+    return os.path.join(path, sorted(paths)[-1])
+
+def file_hash(filepath):
+    with open(local_path, mode='r') as file:
+        return base64.b64encode(hashlib.md5(file.read()).digest())
+
+def dataset_template(dataset_path):
+    return pd.DataFrame(columns=pd.read_csv(dataset_path, nrows=1).columns)
+
 class StorageContext(object):
-    def __init__(self, storage, filepath, mode):
-        self.storage = storage
+    def __init__(self, _storage, filepath, mode):
+        self.storage = _storage
         self.filepath = filepath
         self.mode = mode
 
@@ -33,7 +45,7 @@ class Storage(object):
     def __init__(self):
         if not os.environ.has_key('GOOGLE_APPLICATION_CREDENTIALS'):
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config['storage']['gcloud_credentials']
-        self.bucket = storage.Client().bucket(config['storage']['gcloud_bucket'])
+        self.bucket = gcloud_storage.Client().bucket(config['storage']['gcloud_bucket'])
         self.local_dir = os.path.join(os.getcwd(), 'tmp/cache')
 
     def open(self, filepath, mode='r'):
@@ -43,10 +55,8 @@ class Storage(object):
         for blob in self.list_blobs(path):
             local_path = self.local_path(blob.name)
             try:
-                with open(local_path, mode='r') as file:
-                    hash = base64.b64encode(hashlib.md5(file.read()).digest())
-                    if hash != blob.md5_hash:
-                        raise Exception('local cache invalid')
+                if file_hash(local_path) != blob.md5_hash:
+                    raise Exception('local cache invalid')
             except:
                 try:
                     os.makedirs(os.path.dirname(local_path))
@@ -67,7 +77,8 @@ class Storage(object):
                 filename = os.path.join(parent_dir, file)
                 import pdb; pdb.set_trace()
                 blob = self.bucket.blob(filename)
-                blob.upload_from_filename(self.local_path(filename))
+                if file_hash(filename) != blob.md5:
+                    blob.upload_from_filename(self.local_path(filename))
 
     def list(self, path):
         blobs = list(self.list_blobs(path))
@@ -78,3 +89,5 @@ class Storage(object):
 
     def local_path(self, path):
         return os.path.join(self.local_dir, validate_path(path))
+
+storage = Storage()

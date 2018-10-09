@@ -1,7 +1,0 @@
-daily_job:
-  time: 09:00
-  module: 'jobs.sample_job'
-
-recurring_job:
-  frequency: 24h
-  module: 'jobs.sample_job'

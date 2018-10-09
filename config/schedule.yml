@@ -1,4 +1,0 @@
-proline_job:
-  frequency: daily
-  after: 07:00
-  module: 'projects.proline.job'
