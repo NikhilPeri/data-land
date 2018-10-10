@@ -4,7 +4,6 @@ import responses
 
 from datetime import datetime
 
-from dataland.dataset import get_template
 from projects.proline.scrapers import ScrapeOdds, ScrapeResults
 from tests.utils import as_dicts
 
