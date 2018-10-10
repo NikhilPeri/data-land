@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from dataland.operations import Operation
 from dataland.notification import email_notification
-from dataland.storage import latest_path
+from dataland.storage import latest_path, storage
 from dataland.utils import timestamp
 from sklearn.model_selection import train_test_split
 
@@ -143,7 +143,7 @@ class Train(Operation):
 
 class Predict(Operation):
     def perform(self):
-        odds = pd.read_csv('data/proline/odds.csv')
+        odds = pd.read_csv(storage.local_path('data/proline/odds.csv'))
         odds = odds[
             (odds['cutoff_date'] > str(pd.Timestamp.now())) &
             (odds['cutoff_date'] < str(pd.Timestamp.now().date() + timedelta(days=1)))
@@ -164,7 +164,7 @@ class Predict(Operation):
                 game payouts: {}
                 game probabilities: {}
             '''.format(
-                incremental_timestamp(),
+                timestamp(),
                 ticket['ticket_handle'],
                 ticket['expected_value'],
                 ticket['selected_games'],
@@ -177,10 +177,11 @@ class Predict(Operation):
         email_notification('proline_predictions', notification)
 
     def predict_outcomes(self, odds):
+        storage.pull('data/proline/models')
         odds = odds.reset_index(drop=True)
         with tf.Session() as sess:
             prediction_instances = { k: map(lambda x: [x], v) for k, v in odds[INPUT_COLUMNS].to_dict(orient='list').items() }
-            predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_path('data/proline/models'), 'export'))
+            predictor = tf.contrib.predictor.from_saved_model(os.path.join(latest_path(storage.local_path('data/proline/models')), 'export'))
 
             odds = odds.merge(pd.DataFrame(predictor(prediction_instances)), left_index=True, right_index=True)
 

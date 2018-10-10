@@ -14,7 +14,7 @@ def validate_path(path):
     return path
 
 def latest_path(path, type=''):
-    paths = [p for p in os.listdir(p) if p.endswith(type) ]
+    paths = [p for p in os.listdir(path) if p.endswith(type) ]
     return os.path.join(path, sorted(paths)[-1])
 
 def file_hash(filepath):
