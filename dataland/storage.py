@@ -18,7 +18,7 @@ def latest_path(path, type=''):
     return os.path.join(path, sorted(paths)[-1])
 
 def file_hash(filepath):
-    with open(local_path, mode='r') as file:
+    with open(filepath, mode='r') as file:
         return base64.b64encode(hashlib.md5(file.read()).digest())
 
 def dataset_template(dataset_path):
@@ -72,12 +72,11 @@ class Storage(object):
             return
 
         for parent_dir, _, files in os.walk(local_path):
-            parent_dir = parent_dir.replace(self.local_dir, '')
+            parent_dir = re.sub(r'{}[/]'.format(self.local_dir), '', parent_dir)
             for file in files:
                 filename = os.path.join(parent_dir, file)
-                import pdb; pdb.set_trace()
                 blob = self.bucket.blob(filename)
-                if file_hash(filename) != blob.md5:
+                if file_hash(self.local_path(filename)) != blob.md5_hash:
                     blob.upload_from_filename(self.local_path(filename))
 
     def list(self, path):

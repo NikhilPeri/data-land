@@ -30,17 +30,17 @@ class Train(Operation):
             tf.feature_column.numeric_column('v', dtype=tf.float32),
             tf.feature_column.numeric_column('v_plus', dtype=tf.float32),
         ]
-
+        estimator_path = os.path.join('data/proline/models', timestamp())
         estimator = self.build_estimator(
             feature_columns,
             OUTPUT_COLUMNS,
-            os.path.join('data/proline/models', timestamp())
+            storage.local_path(estimator_path)
         )
 
         estimator.train(input_fn=tf.estimator.inputs.numpy_input_fn(
             { k: np.array(v) for k, v in input_train[INPUT_COLUMNS].to_dict(orient='list').items() },
             y=output_train[OUTPUT_COLUMNS].astype(np.float32).values,
-            num_epochs=200,
+            num_epochs=500,
             num_threads=1,
             shuffle=True,
         ))
@@ -65,6 +65,7 @@ class Train(Operation):
             })
         )
         os.rename(model_dir, os.path.join(estimator.model_dir, 'export'))
+        storage.push(estimator_path)
 
     def build_estimator(self, feature_columns, label_values, model_dir):
 
@@ -115,13 +116,17 @@ class Train(Operation):
             params={
                 'feature_columns': feature_columns,
                 'labels': label_values,
-                'optimizer': tf.train.AdamOptimizer()
+                'optimizer': tf.train.AdamOptimizer(learning_rate=1e-7)
         })
 
 
     def build_train_test_set(self):
-        odds = pd.read_csv('data/proline/odds.csv').drop_duplicates()
-        results = pd.read_csv('data/proline/results.csv').drop_duplicates()
+        storage.pull([
+            'data/proline/odds.csv',
+            'data/proline/results.csv'
+        ])
+        odds = pd.read_csv(storage.local_path('data/proline/odds.csv')).drop_duplicates()
+        results = pd.read_csv(storage.local_path('data/proline/results.csv')).drop_duplicates()
 
         results = results[
             (results['outcome_h_plus'] == 1) |
@@ -148,7 +153,6 @@ class Predict(Operation):
             (odds['cutoff_date'] > str(pd.Timestamp.now())) &
             (odds['cutoff_date'] < str(pd.Timestamp.now().date() + timedelta(days=1)))
         ].reset_index(drop=True)
-
         odds = self.predict_outcomes(odds)
 
         tickets = self.compute_best_ticket_combinations(odds)
