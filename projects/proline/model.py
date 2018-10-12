@@ -116,15 +116,13 @@ class Train(Operation):
             params={
                 'feature_columns': feature_columns,
                 'labels': label_values,
-                'optimizer': tf.train.AdamOptimizer(learning_rate=1e-7)
+                'optimizer': tf.train.AdamOptimizer(learning_rate=1e-4)
         })
 
 
     def build_train_test_set(self):
-        storage.pull([
-            'data/proline/odds.csv',
-            'data/proline/results.csv'
-        ])
+        storage.pull('data/proline/odds.csv')
+        storage.pull('data/proline/results.csv')
         odds = pd.read_csv(storage.local_path('data/proline/odds.csv')).drop_duplicates()
         results = pd.read_csv(storage.local_path('data/proline/results.csv')).drop_duplicates()
 
