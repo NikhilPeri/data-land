@@ -25,10 +25,9 @@ class AppendOperation(Operation):
 
         assert (new_records.columns.values == template.columns.values).all(), 'new_records do not match existing data template'
         with open(storage.local_path(self.__class__.INPUT), 'a') as input_file:
-            new_records.to_csv(input_file, header=False, index=False)
+            new_records.to_csv(input_file, index=False, header=False)
 
         logging.info('{} updated {} records to {}'.format(self.__class__.__name__, len(new_records), self.__class__.INPUT))
-        import pdb; pdb.set_trace()
         storage.push(self.__class__.INPUT)
 
     def new_records(self):
@@ -42,24 +41,27 @@ class TransformOperation(Operation):
     OUTPUT=''
 
     def perform(self):
-        if not os.path.isfile(self.__class__.INPUT):
-            raise ValueError('Operation INPUT "{}" is not a valid path'.format(INPUT))
+        storage.pull(self.__class__.INPUT)
+        input = storage.local_path(self.__class__.INPUT)
 
-        input_dataframe = pd.read_csv(self.__class__.INPUT)
-        input_dataframe = self.update(input_dataframe)
+        input_dataframe = pd.read_csv(input)
+        input_dataframe = self.transform(input_dataframe)
 
-        with open(self.__class__.INPUT, 'a') as input_file:
-            input_dataframe.to_csv(self.__class__.OUTPUT, mode='w+', index=False, float_format='%.4f')
+        output = storage.local_path(self.__class__.OUTPUT)
+        with open(output, 'w+') as output_file:
+            input_dataframe.to_csv(output_file, index=False)
 
-        logging.info('{} processed {} records in {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.OUTPUT))
+        logging.info('{} transformed {} records in {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.OUTPUT))
+        storage.push(output)
 
-    def transform(self, *args):
+    def transform(self, input_dataframe):
         raise NotImplemented
         '''
         returns new output dataframe
         '''
 
 class UpdateOperation(TransformOperation):
+    INPUT=''
 
     def __init__(self, *args, **kwargs):
         self.__class__.OUTPUT=self.__class__.INPUT
