@@ -550,7 +550,7 @@ c.NotebookApp.tornado_settings = {
 #c.ContentsManager.files_handler_params = {}
 
 ## Glob patterns to hide in file and directory listings.
-#c.ContentsManager.hide_globs = [u'__pycache__', '*.pyc', '*.pyo', '.DS_Store', '*.so', '*.dylib', '*~']
+c.ContentsManager.hide_globs = [u'__pycache__', '*.pyc', '*.pyo', '.DS_Store', '*.so', '*.dylib', '*~', 'tmp']
 
 ## Python callable or importstring thereof
 #
