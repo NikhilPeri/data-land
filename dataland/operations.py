@@ -17,13 +17,14 @@ class AppendOperation(Operation):
         input = storage.local_path(self.__class__.INPUT)
         template = dataset_template(input)
 
-        new_records = self.new_records().reindex(columns=template.columns.tolist())
-
+        new_records = self.new_records()
+        assert (new_records.columns.values == template.columns.values).all(), 'new_records do not match existing data template'
+        new_records = new_records.reindex(columns=template.columns.tolist())
+    
         if self.__class__.IGNORE_DUPLICATES:
             old_records = pd.read_csv(input)
             new_records = pd.old_records.concat(new_records).drop_duplicates()
 
-        assert (new_records.columns.values == template.columns.values).all(), 'new_records do not match existing data template'
         with open(storage.local_path(self.__class__.INPUT), 'a') as input_file:
             new_records.to_csv(input_file, index=False, header=False)
 

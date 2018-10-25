@@ -80,7 +80,7 @@ class TestScrapeOdds(object):
             'v_plus': 2.9
         }]
 
-        assert sorted(as_dicts(ScrapeOdds().new_records())) == sorted(expected)
+        assert as_dicts(ScrapeOdds().new_records()) == sorted(expected)
 
 class TestScrapeResults(object):
 
@@ -148,4 +148,4 @@ class TestScrapeResults(object):
             'outcome_v_plus': 0
         }]
 
-        assert sorted(as_dicts(ScrapeResults().new_records())) == sorted(expected)
+        assert as_dicts(ScrapeResults().new_records()) == sorted(expected)
