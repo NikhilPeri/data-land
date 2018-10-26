@@ -4,7 +4,7 @@ import pandas as pd
 
 from mock import Mock
 from unittest import TestCase
-from tests import TEMP_DIR
+from tests.conftest import TMP_DIR
 
 from dataland.storage import storage
 
@@ -29,8 +29,7 @@ class Template(object):
 
 class MockStorageTestCase(TestCase):
     def setUp(self, *args, **kwargs):
-        storage.local_dir = os.path.join(os.getcwd(), TEMP_DIR)
-        os.makedirs(storage.local_dir)
+        storage.local_dir = TMP_DIR
         storage.pull = Mock()
         storage.push = Mock()
 

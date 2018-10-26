@@ -20,7 +20,7 @@ class AppendOperation(Operation):
         new_records = self.new_records()
         assert (new_records.columns.values == template.columns.values).all(), 'new_records do not match existing data template'
         new_records = new_records.reindex(columns=template.columns.tolist())
-    
+
         if self.__class__.IGNORE_DUPLICATES:
             old_records = pd.read_csv(input)
             new_records = pd.old_records.concat(new_records).drop_duplicates()
@@ -38,22 +38,22 @@ class AppendOperation(Operation):
         '''
 
 class TransformOperation(Operation):
-    INPUT=''
+    INPUTS={}
     OUTPUT=''
 
     def perform(self):
-        storage.pull(self.__class__.INPUT)
-        input = storage.local_path(self.__class__.INPUT)
+        input_dataframes = {}
+        for input, path in self.__class__.INPUTS.items():
+            storage.pull(path)
+            input_dataframes[input] = pd.read_csv(storage.local_path(path))
 
-        input_dataframe = pd.read_csv(input)
-        input_dataframe = self.transform(input_dataframe)
+        output_dataframe = self.transform(**input_dataframes)
 
-        output = storage.local_path(self.__class__.OUTPUT)
-        with open(output, 'w+') as output_file:
-            input_dataframe.to_csv(output_file, index=False)
+        with open(storage.local_path(self.__class__.OUTPUT), 'w+') as output_file:
+            output_dataframe.to_csv(output_file, index=False)
 
-        logging.info('{} transformed {} records in {}'.format(self.__class__.__name__, len(input_dataframe), self.__class__.OUTPUT))
-        storage.push(output)
+        logging.info('{} transformed {} records into {}'.format(self.__class__.__name__, len(output_dataframe), self.__class__.OUTPUT))
+        storage.push(self.__class__.OUTPUT)
 
     def transform(self, input_dataframe):
         raise NotImplemented

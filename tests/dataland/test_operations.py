@@ -1,9 +1,10 @@
 import pytest
+from mock import call
 import pandas as pd
 
 from tests.utils import as_dicts, Template, MockStorageTestCase
 
-from dataland.operations import AppendOperation
+from dataland.operations import AppendOperation, TransformOperation
 from dataland.storage import storage
 
 template = Template({
@@ -77,3 +78,57 @@ class TestAppendOperation(MockStorageTestCase):
         operation.perform()
 
         storage.push.assert_called_once_with(operation.INPUT)
+
+class DummyJoinTransformOperation(TransformOperation):
+    INPUTS={
+        'dataframe_one': 'transform_operation_dataframe_one.csv',
+        'dataframe_two': 'transform_operation_dataframe_two.csv'
+    }
+    OUTPUT='transform_operation_output.csv'
+
+    def transform(self, dataframe_one, dataframe_two):
+        return (
+            pd.merge(dataframe_one, dataframe_two, how='inner', on='id')
+              .rename(columns={'value_x': 'value_one', 'value_y': 'value_two'})
+        )
+
+class TestTransformOperation(MockStorageTestCase):
+
+    def setUp(self):
+        super(TestTransformOperation, self).setUp()
+        dataframe_one = template.as_dataframe([
+            {},
+            {'id': 2, 'value': 'B'}
+        ])
+        self.store_dataframe(dataframe_one, DummyJoinTransformOperation.INPUTS['dataframe_one'])
+        dataframe_two = template.as_dataframe([
+            {'value': 'AA'},
+            {'id':2, 'value': 'BB'}
+        ])
+        self.store_dataframe(dataframe_two, DummyJoinTransformOperation.INPUTS['dataframe_two'])
+
+    def test_pulls_input_dataset(self):
+        operation = DummyJoinTransformOperation()
+        operation.perform()
+
+        assert sorted(storage.pull.call_args_list) == sorted([
+            call(operation.INPUTS['dataframe_one']),
+            call(operation.INPUTS['dataframe_two'])
+        ])
+
+    def test_writes_transformed_dataframe_to_output(self):
+        transformed = pd.DataFrame([
+            {'id': 1, 'value_one': 'A', 'value_two': 'AA'},
+            {'id': 2, 'value_one': 'B', 'value_two': 'BB'}
+        ])
+
+        operation = DummyJoinTransformOperation()
+        operation.perform()
+
+        assert as_dicts(self.retrieve_dataframe(DummyJoinTransformOperation.OUTPUT)) == as_dicts(transformed)
+
+    def test_pushes_output_dataset(self):
+        operation = DummyJoinTransformOperation()
+        operation.perform()
+
+        storage.push.assert_called_once_with(operation.OUTPUT)
