@@ -18,7 +18,7 @@ class AppendOperation(Operation):
         template = dataset_template(input)
 
         new_records = self.new_records()
-        assert (new_records.columns.values == template.columns.values).all(), 'new_records do not match existing data template'
+        assert (set(new_records.columns.values) == set(template.columns)), 'new_records do not match existing data template'
         new_records = new_records.reindex(columns=template.columns.tolist())
 
         if self.__class__.IGNORE_DUPLICATES:

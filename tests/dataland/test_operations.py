@@ -40,7 +40,7 @@ class TestAppendOperation(MockStorageTestCase):
         new_records = template.as_dataframe([
             {'id': 3, 'value': 'C'},
             {'id': 4, 'value': 'D'},
-        ])
+        ]).reindex(columns=['value', 'id'])
         combinded_records = template.as_dataframe([
             {},
             {'id': 2, 'value': 'B'},
