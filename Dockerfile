@@ -1,8 +1,11 @@
 FROM python:2.7-slim
 
-COPY . /app
+COPY requirements.txt /app/requirements.txt
 WORKDIR /app
 
-RUN pip install -r requirements.txt
+RUN apt-get upgrade; apt-get update
+RUN pip install --upgrade pip; pip install -r requirements.txt
 
-CMD python -m dataland.scheduler
+COPY . /app
+RUN mkdir logs
+CMD []
