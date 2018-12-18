@@ -16,7 +16,6 @@ print os.system('sudo pip install -r requirements.txt')
 print '===(3/4) Setup dataland/config.yml  ==='
 def setup_config():
     import yaml
-    from dataland import CONFIG_FILE
     config={
         'storage': {
             'gcloud_bucket': 'data-land',
@@ -27,7 +26,7 @@ def setup_config():
             'mailgun_domain': raw_input('Mailgun Domain')
         }
     }
-    with open(CONFIG_FILE, 'w+') as config_file:
+    with open('config/dataland.yml', 'w+') as config_file:
         yaml.dump(config, config_file)
 
 setup_config()
