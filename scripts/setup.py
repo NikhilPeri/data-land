@@ -9,6 +9,16 @@ SYSTEM_DEPENDENCIES=[
     'systemd',
 ]
 print os.system('sudo apt-get install {}'.format(' '.join(SYSTEM_DEPENDENCIES)))
+swap_size = raw_input('Enter swap partition size in GB (enter 0 to skip), recommended if system memory less than 1GB')
+try:
+    swap_size = int(swap_size)
+    if swap_size < 1:
+        raise
+    os.system('sudo fallocate -l {}G /swapfile')
+    os.system('sudo chmod 600 /swapfile; sudo mkswap /swapfile; sudo swapon /swapfile; sudo swapon -s')
+    os.system('sudo echo "swapfile none swap sw 0 0" >> /etc/fstab')
+except:
+    pass
 
 print '===(2/4) Installing Python Dependencies==='
 print os.system('sudo pip install -r requirements.txt')
@@ -19,11 +29,11 @@ def setup_config():
     config={
         'storage': {
             'gcloud_bucket': 'data-land',
-            'gcloud_credentials': raw_input('Path to GCloud credential file'),
+            'gcloud_credentials': raw_input('Path to GCloud credential file').strip(),
         },
         'notification': {
-            'mailgun_apikey': raw_input('Mailgun API key'),
-            'mailgun_domain': raw_input('Mailgun Domain')
+            'mailgun_apikey': raw_input('Mailgun API key').strip(),
+            'mailgun_domain': raw_input('Mailgun Domain').strip()
         }
     }
     with open('config/dataland.yml', 'w+') as config_file:
