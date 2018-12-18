@@ -1,0 +1,20 @@
+#!/bin/sh
+
+echo "=== Build image ==="
+scripts/build
+mkdir tmp
+docker save dataland:latest > tmp/image.tar
+
+echo "=== Compress image =="
+gzip tmp/image.tar --force -1
+
+echo "=== Copy image to pi ==="
+scp tmp/image.tar.gz pi@raspberrypi:/home/pi/dataland.tar.gz
+
+echo "=== Loading image on pi ==="
+ssh pi@raspberrypi << EOM
+  docker stop $(docker ps -aq);
+  gzip -d dataland.tar.gz;
+  docker load -i dataland.tar;
+  docker run dataland:latest python -m dataland.scheduler;
+EOM

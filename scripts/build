@@ -1,9 +1,10 @@
 #!/bin/sh
 
-cd ..
 echo "removing *.pyc"
 find . -name '*.pyc' -delete
+rm -rf tmp/*
 
+cd ..
 docker build data-land -t dataland
 
 cd data-land
