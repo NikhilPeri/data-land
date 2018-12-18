@@ -16,5 +16,5 @@ ssh pi@raspberrypi << EOM
   docker stop $(docker ps -aq);
   gzip -d dataland.tar.gz;
   docker load -i dataland.tar;
-  docker run dataland:latest python -m dataland.scheduler;
+  docker run dataland:latest python -m dataland.scheduler
 EOM
