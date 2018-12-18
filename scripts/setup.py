@@ -13,8 +13,24 @@ print os.system('sudo apt-get install {}'.format(' '.join(SYSTEM_DEPENDENCIES)))
 print '===(2/4) Installing Python Dependencies==='
 print os.system('sudo pip install -r requirements.txt')
 
-print '===(3/4) Setup Google Service Account  ==='
-# TODO
+print '===(3/4) Setup dataland/config.yml  ==='
+def setup_config():
+    import yaml
+    from dataland import CONFIG_FILE
+    config={
+        'storage': {
+            'gcloud_bucket': 'data-land',
+            'gcloud_credentials': raw_input('Path to GCloud credential file'),
+        },
+        'notification': {
+            'mailgun_apikey': raw_input('Mailgun API key'),
+            'mailgun_domain': raw_input('Mailgun Domain')
+        }
+    }
+    with open(CONFIG_FILE, 'w+') as config_file:
+        yaml.dump(config, config_file)
+
+setup_config()
 
 print '===(4/4)   Installing System Service   ==='
 SERVICE='''[Unit]

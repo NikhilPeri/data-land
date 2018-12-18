@@ -14,4 +14,4 @@ beautifulsoup4==4.6.3
 protobuf==3.6.1
 scikit_learn==0.20.1
 tensorflow_hub==0.2.0
-PyYAML==3.13
+pyyaml==3.13
