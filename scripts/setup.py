@@ -20,6 +20,11 @@ try:
 except:
     pass
 
+try:
+    os.makedirs('logs')
+except:
+    pass
+
 print '===(2/4) Installing Python Dependencies==='
 print os.system('sudo pip install -r requirements.txt')
 
@@ -42,20 +47,26 @@ def setup_config():
 setup_config()
 
 print '===(4/4)   Installing System Service   ==='
+SCHEDULER_SCRIPT='scripts/scheduler'
+with open(SCHEDULER_SCRIPT, 'w+') as scheduler_script:
+    scheduler_script.write('cd {} && /usr/bin/python -m dataland.scheduler'.format(os.getcwd()))
+os.system('sudo chmod +x {}'.format(SCHEDULER_SCRIPT))
+
 SERVICE='''[Unit]
 Description=Dataland Scheduler
 After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=cd {} && /usr/bin/python -m dataland.scheduler &
+ExecStart=/bin/bash {}
 
 [Install]
 WantedBy=multi-user.target
-'''.format(os.getcwd())
+'''.format(os.path.join(os.getcwd(), SCHEDULER_SCRIPT))
 
-with open('/lib/systemd/system/dataland.service') as service:
+with open('/lib/systemd/system/dataland.service', 'w+') as service:
     service.write(SERVICE)
+
 
 os.system('sudo chmod 644 /lib/systemd/system/dataland.service')
 os.system('sudo systemctl daemon-reload')
